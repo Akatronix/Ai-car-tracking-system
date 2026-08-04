@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}TrackVision{% endblock %} — TrackVision</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+    {% block extra_head %}{% endblock %}
+  </head>
+  <body>
+    <aside class="sidebar" id="sidebar">
+      <!-- <div class="sidebar-brand">
+        <svg class="brand-icon" viewBox="0 0 32 32" fill="none">
+          <rect
+            x="2"
+            y="8"
+            width="28"
+            height="16"
+            rx="4"
+            stroke="var(--accent)"
+            stroke-width="2"
+          />
+          <circle
+            cx="10"
+            cy="26"
+            r="3"
+            stroke="var(--accent)"
+            stroke-width="2"
+          />
+          <circle
+            cx="22"
+            cy="26"
+            r="3"
+            stroke="var(--accent)"
+            stroke-width="2"
+          />
+          <path
+            d="M8 8L12 2H20L24 8"
+            stroke="var(--accent)"
+            stroke-width="2"
+            stroke-linejoin="round"
+          />
+          <circle cx="16" cy="16" r="2" fill="var(--accent)" />
+        </svg>
+        <div>
+          <div class="brand-name">TrackVision</div>
+          <div class="brand-sub">AI Tracking System</div>
+        </div>
+      </div> -->
+
+      <div class="sidebar-brand">
+        <img
+          src="{{ url_for('static', filename='logo.png') }}"
+          alt="Logo"
+          class="brand-logo"
+        />
+        <div>
+          <div class="brand-name">TrackVision</div>
+          <div class="brand-sub">AI Tracking System</div>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <a
+          href="/"
+          class="nav-item {% if page == 'dashboard' %}active{% endif %}"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <rect x="3" y="3" width="7" height="7" rx="1" />
+            <rect x="14" y="3" width="7" height="7" rx="1" />
+            <rect x="3" y="14" width="7" height="7" rx="1" />
+            <rect x="14" y="14" width="7" height="7" rx="1" />
+          </svg>
+          <span>Dashboard</span>
+        </a>
+        <a
+          href="/camera"
+          class="nav-item {% if page == 'camera' %}active{% endif %}"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path
+              d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"
+            />
+            <circle cx="12" cy="13" r="4" />
+          </svg>
+          <span>Live Camera</span>
+        </a>
+        <a
+          href="/analytics"
+          class="nav-item {% if page == 'analytics' %}active{% endif %}"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <line x1="18" y1="20" x2="18" y2="10" />
+            <line x1="12" y1="20" x2="12" y2="4" />
+            <line x1="6" y1="20" x2="6" y2="14" />
+          </svg>
+          <span>Analytics</span>
+        </a>
+        <a
+          href="/vehicles"
+          class="nav-item {% if page == 'vehicles' %}active{% endif %}"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <rect x="1" y="3" width="15" height="13" rx="2" />
+            <path d="M16 8h4a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-2" />
+            <circle cx="5.5" cy="20.5" r="2" />
+            <circle cx="18.5" cy="20.5" r="2" />
+          </svg>
+          <span>Vehicles</span>
+        </a>
+        <a
+          href="/alerts"
+          class="nav-item {% if page == 'alerts' %}active{% endif %}"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+          </svg>
+          <span>Alerts</span>
+          <span class="nav-badge" id="alertBadge" style="display: none">0</span>
+        </a>
+        <a
+          href="/settings"
+          class="nav-item {% if page == 'settings' %}active{% endif %}"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="12" r="3" />
+            <path
+              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+            />
+          </svg>
+          <span>Settings</span>
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="system-status" id="systemStatus">
+          <span class="status-dot offline"></span>
+          <span class="status-text">System Offline</span>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="top-bar">
+        <div class="top-bar-left">
+          <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+          </button>
+          <h1 class="page-title">
+            {% block page_title %}Dashboard{% endblock %}
+          </h1>
+        </div>
+        <div class="top-bar-right">
+          <div class="live-clock" id="liveClock">--:--:--</div>
+          <div
+            class="source-indicator"
+            id="sourceIndicator"
+            style="display: none"
+          >
+            <span class="source-label" id="sourceLabel">—</span>
+          </div>
+          <button
+            class="btn btn-sm"
+            id="cameraToggleBtn"
+            onclick="toggleCamera()"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              width="14"
+              height="14"
+            >
+              <polygon points="5 3 19 12 5 21 5 3" />
+            </svg>
+            <span>Start Camera</span>
+          </button>
+          <div class="fps-display" id="fpsDisplay" style="display: none">
+            <span class="fps-value" id="fpsValue">0</span> FPS
+          </div>
+        </div>
+      </header>
+      <div class="page-content">{% block content %}{% endblock %}</div>
+    </main>
+
+    <div class="toast-container" id="toastContainer"></div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    {% block extra_scripts %}{% endblock %}
+  </body>
+</html>

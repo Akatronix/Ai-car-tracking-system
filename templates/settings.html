@@ -1,0 +1,680 @@
+{% extends "base.html" %} {% set page = "settings" %} {% block title
+%}Settings{% endblock %} {% block page_title %}System Settings{% endblock %} {%
+block content %}
+
+<!-- Camera Source — Prominent -->
+<div class="card" style="margin-bottom: 1.25rem">
+  <div class="card-header"><h3 class="card-title">Camera Source</h3></div>
+  <div class="settings-form">
+    <div class="source-input-group">
+      <div class="source-presets">
+        <button
+          class="preset-btn active"
+          onclick="setPreset('0', this)"
+          title="Default Webcam"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            width="18"
+            height="18"
+          >
+            <path
+              d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"
+            />
+            <circle cx="12" cy="13" r="4" />
+          </svg>
+          Webcam
+        </button>
+        <button
+          class="preset-btn"
+          onclick="setPreset('1', this)"
+          title="Second Camera"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            width="18"
+            height="18"
+          >
+            <path
+              d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"
+            />
+            <circle cx="12" cy="13" r="4" />
+          </svg>
+          Cam 1
+        </button>
+        <button
+          class="preset-btn"
+          onclick="setPreset('2', this)"
+          title="Third Camera"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            width="18"
+            height="18"
+          >
+            <path
+              d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"
+            />
+            <circle cx="12" cy="13" r="4" />
+          </svg>
+          Cam 2
+        </button>
+        <button
+          class="preset-btn"
+          onclick="setPreset('ip', this)"
+          title="IP Camera"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            width="18"
+            height="18"
+          >
+            <rect x="2" y="2" width="20" height="8" rx="2" />
+            <rect x="2" y="14" width="20" height="8" rx="2" />
+            <circle cx="6" cy="6" r="1" />
+            <circle cx="6" cy="18" r="1" />
+          </svg>
+          IP Camera
+        </button>
+        <button
+          class="preset-btn"
+          onclick="setPreset('file', this)"
+          title="Video File"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            width="18"
+            height="18"
+          >
+            <path
+              d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+            />
+            <polyline points="14 2 14 8 20 8" />
+          </svg>
+          Video File
+        </button>
+      </div>
+      <div class="source-input-row">
+        <input
+          type="text"
+          id="cameraSource"
+          class="input-field source-input"
+          value="0"
+          placeholder="0 / http://192.168.1.100:8080/video / video.mp4"
+        />
+        <button class="btn" onclick="testSource()" id="testBtn">Test</button>
+        <button class="btn btn-primary" onclick="applyAndStart()" id="applyBtn">
+          Apply & Start
+        </button>
+      </div>
+      <div id="testResult" class="test-result" style="display: none"></div>
+      <div class="source-examples">
+        <div class="example-title">Examples:</div>
+        <code class="example-item" onclick="useExample('0')">0</code>
+        <code
+          class="example-item"
+          onclick="useExample('http://192.168.1.100:8080/video')"
+          >http://192.168.1.100:8080/video</code
+        >
+        <code
+          class="example-item"
+          onclick="useExample('http://192.168.0.100/cam-hi.jpg')"
+          >http://192.168.0.100/cam-hi.jpg</code
+        >
+        <code class="example-item" onclick="useExample('video.mp4')"
+          >video.mp4</code
+        >
+        <code
+          class="example-item"
+          onclick="useExample('rtsp://admin:pass@192.168.1.100:554/stream')"
+          >rtsp://admin:pass@...</code
+        >
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="settings-grid">
+  <div class="card">
+    <div class="card-header"><h3 class="card-title">Detection</h3></div>
+    <div class="settings-form">
+      <div class="form-group">
+        <label>Confidence Threshold</label>
+        <input
+          type="range"
+          id="confidence"
+          min="10"
+          max="90"
+          value="45"
+          class="range-input"
+          oninput="this.nextElementSibling.textContent = this.value + '%'"
+        />
+        <span class="range-value">45%</span>
+      </div>
+      <div class="form-group">
+        <label>Speed Limit (km/h)</label>
+        <input
+          type="number"
+          id="speedLimit"
+          value="60"
+          class="input-field"
+          min="10"
+          max="200"
+        />
+      </div>
+      <div class="form-group">
+        <label>Counting Line Y Position</label>
+        <input
+          type="number"
+          id="lineY"
+          value="300"
+          class="input-field"
+          min="50"
+          max="1000"
+        />
+        <span class="form-hint">Pixel Y coordinate for the counting line</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h3 class="card-title">Analytics</h3></div>
+    <div class="settings-form">
+      <div class="form-group">
+        <label>Counting Direction</label>
+        <select id="countDir" class="input-field">
+          <option value="down">Down</option>
+          <option value="up">Up</option>
+          <option value="both">Both</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Expected Direction</label>
+        <select id="expDir" class="input-field">
+          <option value="left-to-right">Left to Right</option>
+          <option value="right-to-left">Right to Left</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Congestion Threshold</label>
+        <input
+          type="number"
+          id="congThresh"
+          value="8"
+          class="input-field"
+          min="1"
+          max="50"
+        />
+      </div>
+      <div class="form-group">
+        <label>Tracker Type</label>
+        <select id="trackerType" class="input-field">
+          <option value="norfair">Norfair</option>
+          <option value="centroid">Centroid + Kalman</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h3 class="card-title">Feature Toggles</h3></div>
+    <div class="settings-form">
+      <div class="toggle-group">
+        <label>Wrong-Way Detection</label
+        ><label class="toggle"
+          ><input type="checkbox" id="tWW" checked /><span
+            class="toggle-slider"
+          ></span
+        ></label>
+      </div>
+      <div class="toggle-group">
+        <label>Intrusion Detection</label
+        ><label class="toggle"
+          ><input type="checkbox" id="tInt" checked /><span
+            class="toggle-slider"
+          ></span
+        ></label>
+      </div>
+      <div class="toggle-group">
+        <label>Congestion Analysis</label
+        ><label class="toggle"
+          ><input type="checkbox" id="tCong" checked /><span
+            class="toggle-slider"
+          ></span
+        ></label>
+      </div>
+      <div class="toggle-group">
+        <label>Parking Monitor</label
+        ><label class="toggle"
+          ><input type="checkbox" id="tPark" /><span
+            class="toggle-slider"
+          ></span
+        ></label>
+      </div>
+      <div class="toggle-group">
+        <label>Auto-Save Snapshots</label
+        ><label class="toggle"
+          ><input type="checkbox" id="tSnap" checked /><span
+            class="toggle-slider"
+          ></span
+        ></label>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h3 class="card-title">System Info</h3></div>
+    <div class="sys-info-grid">
+      <div class="sys-info-item">
+        <span class="sys-label">Version</span
+        ><span class="sys-value">1.0.0</span>
+      </div>
+      <div class="sys-info-item">
+        <span class="sys-label">Model</span
+        ><span class="sys-value">YOLOv8n</span>
+      </div>
+      <div class="sys-info-item">
+        <span class="sys-label">Tracker</span
+        ><span class="sys-value" id="sysTracker">Norfair</span>
+      </div>
+      <div class="sys-info-item">
+        <span class="sys-label">Backend</span
+        ><span class="sys-value">Flask + SocketIO</span>
+      </div>
+      <div class="sys-info-item">
+        <span class="sys-label">Database</span
+        ><span class="sys-value">SQLite</span>
+      </div>
+      <div class="sys-info-item">
+        <span class="sys-label">Status</span
+        ><span class="sys-value" id="sysStatus">—</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="settings-actions">
+  <button class="btn btn-lg" onclick="saveSettings()">Save Settings</button>
+  <button class="btn btn-lg btn-ghost" onclick="loadSettings()">Reset</button>
+</div>
+
+<!-- Danger Zone -->
+<div class="card danger-zone-card" style="margin-top: 24px">
+  <div class="card-header">
+    <h3 class="card-title" style="color: var(--danger)">Danger Zone</h3>
+  </div>
+  <div class="settings-form">
+    <div class="danger-zone-desc">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        width="20"
+        height="20"
+        style="color: var(--danger); flex-shrink: 0; margin-top: 2px"
+      >
+        <path
+          d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+        />
+        <line x1="12" y1="9" x2="12" y2="13" />
+        <line x1="12" y1="17" x2="12.01" y2="17" />
+      </svg>
+      <div>
+        <div style="font-weight: 600; color: var(--text); margin-bottom: 4px">
+          Clear All Saved Data
+        </div>
+        <div
+          style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.5"
+        >
+          Permanently delete all saved snapshots, vehicle logs, alerts, and
+          analytics history. This action cannot be undone.
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-danger" onclick="showClearModal()">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        width="16"
+        height="16"
+      >
+        <polyline points="3 6 5 6 21 6" />
+        <path
+          d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+        />
+      </svg>
+      Clear All Data
+    </button>
+  </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div class="modal-overlay" id="clearModal" onclick="hideClearModal(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-icon-wrap">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        width="32"
+        height="32"
+      >
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+        <line x1="12" y1="8" x2="12" y2="12" />
+        <line x1="12" y1="16" x2="12.01" y2="16" />
+      </svg>
+    </div>
+    <h3 class="modal-title">Are you absolutely sure?</h3>
+    <p class="modal-desc">
+      This will permanently delete all saved snapshots, vehicle detection logs,
+      alert history, and hourly analytics data. This cannot be undone.
+    </p>
+    <div class="modal-info">
+      <div class="modal-info-row">
+        <span class="modal-info-label">Snapshots</span>
+        <span class="modal-info-value" id="modalSnapCount">—</span>
+      </div>
+      <div class="modal-info-row">
+        <span class="modal-info-label">Vehicle Logs</span>
+        <span class="modal-info-value" id="modalLogCount">—</span>
+      </div>
+      <div class="modal-info-row">
+        <span class="modal-info-label">Alerts</span>
+        <span class="modal-info-value" id="modalAlertCount">—</span>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="hideClearModal()">Cancel</button>
+      <button
+        class="btn btn-danger"
+        id="confirmClearBtn"
+        onclick="executeClear()"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          width="16"
+          height="16"
+        >
+          <polyline points="3 6 5 6 21 6" />
+          <path
+            d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+          />
+        </svg>
+        Yes, Clear Everything
+      </button>
+    </div>
+  </div>
+</div>
+
+{% endblock %} {% block extra_scripts %}
+<script>
+  function setPreset(val, btn) {
+    document
+      .querySelectorAll(".preset-btn")
+      .forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    const inp = document.getElementById("cameraSource");
+    if (val === "ip") inp.value = "http://192.168.1.100:8080/video";
+    else if (val === "file") inp.value = "video.mp4";
+    else inp.value = val;
+    inp.focus();
+  }
+
+  function useExample(val) {
+    document.getElementById("cameraSource").value = val;
+    document
+      .querySelectorAll(".preset-btn")
+      .forEach((b) => b.classList.remove("active"));
+  }
+
+  function testSource() {
+    const src = document.getElementById("cameraSource").value.trim();
+    const el = document.getElementById("testResult");
+    const btn = document.getElementById("testBtn");
+    el.style.display = "block";
+    el.innerHTML =
+      '<span style="color:var(--warning);">Testing connection...</span>';
+    btn.disabled = true;
+    btn.textContent = "Testing...";
+    fetch("/api/camera/test", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ source: src }),
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        btn.disabled = false;
+        btn.textContent = "Test";
+        if (d.success) {
+          el.innerHTML = `<span style="color:var(--accent);">✓ Connected successfully!</span> Resolution: <strong>${d.resolution}</strong> | FPS: <strong>${d.fps}</strong>`;
+          el.style.borderColor = "var(--accent)";
+        } else {
+          el.innerHTML = `<span style="color:var(--danger);">✗ Failed</span> — ${d.error || "Cannot open this source. Check the address and try again."}`;
+          el.style.borderColor = "var(--danger)";
+        }
+      })
+      .catch(() => {
+        btn.disabled = false;
+        btn.textContent = "Test";
+        el.innerHTML =
+          '<span style="color:var(--danger);">✗ Network error</span>';
+        el.style.borderColor = "var(--danger)";
+      });
+  }
+
+  function applyAndStart() {
+    const src = document.getElementById("cameraSource").value.trim();
+    if (!src) {
+      showToast("Enter a source", "error");
+      return;
+    }
+    saveSettings();
+    const btn = document.getElementById("applyBtn");
+    btn.disabled = true;
+    btn.textContent = "Starting...";
+    fetch("/api/camera/start", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ source: src }),
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        btn.disabled = false;
+        btn.textContent = "Apply & Start";
+        if (d.success) {
+          cameraRunning = true;
+          document.getElementById("cameraToggleBtn").innerHTML =
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg><span>Stop Camera</span>';
+          showLiveIndicators(true);
+          document
+            .querySelectorAll(".camera-feed,.camera-feed-full")
+            .forEach((i) => (i.src = "/video_feed?t=" + Date.now()));
+          const si = document.getElementById("sourceIndicator");
+          si.style.display = "inline-flex";
+          const label = src.length > 30 ? src.substring(0, 30) + "..." : src;
+          document.getElementById("sourceLabel").textContent = label;
+          showToast("Camera started: " + src, "success");
+        } else {
+          showToast("Failed to start camera", "error");
+        }
+      });
+  }
+
+  function loadSettings() {
+    fetch("/api/settings")
+      .then((r) => r.json())
+      .then((s) => {
+        if (s.confidence_threshold) {
+          document.getElementById("confidence").value = s.confidence_threshold;
+          document.getElementById("confidence").nextElementSibling.textContent =
+            s.confidence_threshold + "%";
+        }
+        if (s.speed_limit)
+          document.getElementById("speedLimit").value = s.speed_limit;
+        if (s.counting_line_y)
+          document.getElementById("lineY").value = s.counting_line_y;
+        if (s.counting_direction)
+          document.getElementById("countDir").value = s.counting_direction;
+        if (s.expected_direction)
+          document.getElementById("expDir").value = s.expected_direction;
+        if (s.congestion_threshold)
+          document.getElementById("congThresh").value = s.congestion_threshold;
+        if (s.tracker_type) {
+          document.getElementById("trackerType").value = s.tracker_type;
+          document.getElementById("sysTracker").textContent =
+            s.tracker_type === "norfair" ? "Norfair" : "Centroid+KF";
+        }
+        if (s.camera_source)
+          document.getElementById("cameraSource").value = s.camera_source;
+        document.getElementById("tWW").checked =
+          s.wrong_way_enabled !== "False" && s.wrong_way_enabled !== "0";
+        document.getElementById("tInt").checked =
+          s.intrusion_enabled !== "False" && s.intrusion_enabled !== "0";
+        document.getElementById("tCong").checked =
+          s.congestion_enabled !== "False" && s.congestion_enabled !== "0";
+        document.getElementById("tPark").checked =
+          s.parking_enabled === "True" || s.parking_enabled === "1";
+        document.getElementById("tSnap").checked =
+          s.auto_snapshots !== "False" && s.auto_snapshots !== "0";
+      });
+  }
+
+  function saveSettings() {
+    fetch("/api/settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        confidence_threshold: document.getElementById("confidence").value,
+        speed_limit: document.getElementById("speedLimit").value,
+        counting_line_y: document.getElementById("lineY").value,
+        counting_direction: document.getElementById("countDir").value,
+        expected_direction: document.getElementById("expDir").value,
+        congestion_threshold: document.getElementById("congThresh").value,
+        tracker_type: document.getElementById("trackerType").value,
+        camera_source: document.getElementById("cameraSource").value,
+        wrong_way_enabled: document.getElementById("tWW").checked,
+        intrusion_enabled: document.getElementById("tInt").checked,
+        congestion_enabled: document.getElementById("tCong").checked,
+        parking_enabled: document.getElementById("tPark").checked,
+        auto_snapshots: document.getElementById("tSnap").checked,
+      }),
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.success) showToast("Settings saved", "success");
+      });
+  }
+
+  function updateSysStatus() {
+    fetch("/api/status")
+      .then((r) => r.json())
+      .then((d) => {
+        const el = document.getElementById("sysStatus");
+        el.textContent = d.running ? `Running (${d.fps} FPS)` : "Offline";
+        el.style.color = d.running ? "var(--accent)" : "#ef4444";
+        if (d.running) {
+          const si = document.getElementById("sourceIndicator");
+          si.style.display = "inline-flex";
+          const label =
+            d.source.length > 30 ? d.source.substring(0, 30) + "..." : d.source;
+          document.getElementById("sourceLabel").textContent = label;
+        }
+      });
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    loadSettings();
+    updateSysStatus();
+    setInterval(updateSysStatus, 5000);
+  });
+
+  function showClearModal() {
+    const modal = document.getElementById("clearModal");
+    modal.classList.add("active");
+    // Fetch counts to show in modal
+    fetch("/api/analytics/summary")
+      .then((r) => r.json())
+      .then((d) => {
+        document.getElementById("modalAlertCount").textContent = d.total_alerts;
+      });
+    fetch("/api/vehicles?limit=1")
+      .then((r) => r.json())
+      .then((d) => {
+        document.getElementById("modalLogCount").textContent = "Loading...";
+        // Get total count from a separate call
+      });
+    // Get snapshot count
+    fetch("/api/snapshots")
+      .then((r) => r.json())
+      .then((files) => {
+        document.getElementById("modalSnapCount").textContent =
+          files.length + " files";
+      })
+      .catch(() => {
+        document.getElementById("modalSnapCount").textContent = "Unknown";
+      });
+    // Get log count
+    fetch("/api/status")
+      .then((r) => r.json())
+      .then((d) => {
+        document.getElementById("modalLogCount").textContent =
+          d.total_counted + " records";
+      });
+  }
+
+  function hideClearModal(e) {
+    if (e && e.target !== e.currentTarget) return;
+    document.getElementById("clearModal").classList.remove("active");
+  }
+
+  function executeClear() {
+    const btn = document.getElementById("confirmClearBtn");
+    btn.disabled = true;
+    btn.innerHTML =
+      '<svg class="spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg> Clearing...';
+
+    fetch("/api/clear-data", { method: "POST" })
+      .then((r) => r.json())
+      .then((d) => {
+        btn.disabled = false;
+        btn.innerHTML =
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Yes, Clear Everything';
+        hideClearModal();
+        if (d.success) {
+          showToast(
+            "Cleared " + d.deleted_files + " files and all database records",
+            "success",
+          );
+        } else {
+          showToast("Error: " + (d.error || "Unknown error"), "error");
+        }
+      })
+      .catch(() => {
+        btn.disabled = false;
+        btn.innerHTML =
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Yes, Clear Everything';
+        hideClearModal();
+        showToast("Failed to clear data", "error");
+      });
+  }
+</script>
+{% endblock %}

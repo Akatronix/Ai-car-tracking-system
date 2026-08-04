@@ -1,0 +1,198 @@
+{% extends "base.html" %} {% set page = "analytics" %} {% block title
+%}Analytics{% endblock %} {% block page_title %}Traffic Analytics{% endblock %}
+{% block content %}
+<div class="stats-row">
+  <div class="stat-card">
+    <div class="stat-info">
+      <div class="stat-value" id="anTotal">0</div>
+      <div class="stat-label">Today's Total</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-info">
+      <div class="stat-value" id="anSpeed">0</div>
+      <div class="stat-label">Speed Violations</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-info">
+      <div class="stat-value" id="anWW">0</div>
+      <div class="stat-label">Wrong-Way Events</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-info">
+      <div class="stat-value" id="anInt">0</div>
+      <div class="stat-label">Intrusion Events</div>
+    </div>
+  </div>
+</div>
+<div class="dashboard-grid">
+  <div class="card" style="grid-column: span 2">
+    <div class="card-header">
+      <h3 class="card-title">24-Hour Traffic Volume</h3>
+    </div>
+    <div class="chart-container" style="height: 300px">
+      <canvas id="anHourly"></canvas>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">Violation Breakdown</h3>
+    </div>
+    <div class="chart-container" style="height: 300px">
+      <canvas id="anViol"></canvas>
+    </div>
+  </div>
+</div>
+<div class="dashboard-grid" style="margin-top: 1.25rem">
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">Speed Distribution</h3>
+    </div>
+    <div class="chart-container" style="height: 250px">
+      <canvas id="anSpeedDist"></canvas>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h3 class="card-title">Peak Hours</h3></div>
+    <div class="peak-hours-list" id="peakList">
+      <div class="empty-state small"><p>Loading...</p></div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_scripts %}
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    fetch("/api/analytics/summary")
+      .then((r) => r.json())
+      .then((d) => {
+        document.getElementById("anTotal").textContent = d.today_count;
+        document.getElementById("anSpeed").textContent = d.speed_violations;
+        document.getElementById("anWW").textContent = d.wrong_way_violations;
+        document.getElementById("anInt").textContent = d.intrusions;
+      });
+    const hC = new Chart(document.getElementById("anHourly"), {
+      type: "line",
+      data: {
+        labels: Array.from({ length: 24 }, (_, i) => `${i}:00`),
+        datasets: [
+          {
+            data: new Array(24).fill(0),
+            borderColor: "rgba(74,222,128,1)",
+            backgroundColor: "rgba(74,222,128,0.1)",
+            fill: true,
+            tension: 0.4,
+            pointRadius: 3,
+            pointBackgroundColor: "rgba(74,222,128,1)",
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: {
+            grid: { color: "rgba(255,255,255,0.04)" },
+            ticks: {
+              color: "#6b7280",
+              maxRotation: 0,
+              autoSkip: true,
+              maxTicksLimit: 12,
+            },
+          },
+          y: {
+            grid: { color: "rgba(255,255,255,0.04)" },
+            ticks: { color: "#6b7280" },
+            beginAtZero: true,
+          },
+        },
+      },
+    });
+    fetch("/api/analytics/hourly?days=1")
+      .then((r) => r.json())
+      .then((d) => {
+        const c = new Array(24).fill(0);
+        d.forEach((x) => (c[x.hour] = x.count));
+        hC.data.datasets[0].data = c;
+        hC.update();
+        const sorted = c
+          .map((v, i) => ({ h: i, c: v }))
+          .filter((x) => x.c > 0)
+          .sort((a, b) => b.c - a.c)
+          .slice(0, 5);
+        document.getElementById("peakList").innerHTML = sorted.length
+          ? sorted
+              .map(
+                (s, i) =>
+                  `<div class="peak-hour-item"><span class="peak-rank">#${i + 1}</span><span class="peak-time">${s.h}:00 - ${s.h + 1}:00</span><span class="peak-count">${s.c} vehicles</span></div>`,
+              )
+              .join("")
+          : '<div class="empty-state small"><p>No data yet</p></div>';
+      });
+    new Chart(document.getElementById("anViol"), {
+      type: "doughnut",
+      data: {
+        labels: ["Speed", "Wrong Way", "Intrusion"],
+        datasets: [
+          {
+            data: [0, 0, 0],
+            backgroundColor: [
+              "rgba(251,191,36,0.8)",
+              "rgba(239,68,68,0.8)",
+              "rgba(168,85,247,0.8)",
+            ],
+            borderColor: "#111827",
+            borderWidth: 3,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: "60%",
+        plugins: {
+          legend: {
+            position: "bottom",
+            labels: { color: "#9ca3af", padding: 12, usePointStyle: true },
+          },
+        },
+      },
+    });
+    new Chart(document.getElementById("anSpeedDist"), {
+      type: "bar",
+      data: {
+        labels: ["0-20", "20-40", "40-60", "60-80", "80-100", "100+"],
+        datasets: [
+          {
+            data: [0, 0, 0, 0, 0, 0],
+            backgroundColor: [
+              "rgba(74,222,128,0.6)",
+              "rgba(74,222,128,0.6)",
+              "rgba(74,222,128,0.6)",
+              "rgba(251,191,36,0.6)",
+              "rgba(239,68,68,0.6)",
+              "rgba(239,68,68,0.8)",
+            ],
+            borderRadius: 4,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: "#6b7280" } },
+          y: {
+            grid: { color: "rgba(255,255,255,0.04)" },
+            ticks: { color: "#6b7280" },
+            beginAtZero: true,
+          },
+        },
+      },
+    });
+  });
+</script>
+{% endblock %}

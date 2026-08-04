@@ -1,0 +1,1 @@
+# Core AI module — detection, tracking, analytics

@@ -1,0 +1,217 @@
+{% extends "base.html" %} {% set page = "camera" %} {% block title %}Live
+Camera{% endblock %} {% block page_title %}Live Camera Feed{% endblock %} {%
+block content %}
+<div class="camera-fullscreen">
+  <div class="camera-main">
+    <img
+      id="cameraFeed"
+      src="{{ url_for('video_feed') }}"
+      alt="Live"
+      class="camera-feed-full"
+    />
+    <div class="camera-hud-top">
+      <div class="hud-item">
+        <span class="hud-label">FPS</span
+        ><span class="hud-value" id="camFps">0</span>
+      </div>
+      <div class="hud-item">
+        <span class="hud-label">Active</span
+        ><span class="hud-value" id="camActive">0</span>
+      </div>
+      <div class="hud-item">
+        <span class="hud-label">In</span
+        ><span class="hud-value" id="camIn">0</span>
+      </div>
+      <div class="hud-item">
+        <span class="hud-label">Out</span
+        ><span class="hud-value" id="camOut">0</span>
+      </div>
+      <div class="hud-item">
+        <span class="hud-label">Congestion</span
+        ><span class="hud-value" id="camCong">0%</span>
+      </div>
+    </div>
+    <div class="camera-hud-bottom">
+      <span class="live-indicator" id="camLive" style="display: none"
+        ><span class="live-dot"></span> LIVE</span
+      >
+      <span id="camTs"></span>
+    </div>
+  </div>
+  <div class="camera-sidebar-panel">
+    <div class="cam-panel-section">
+      <h4>Quick Source</h4>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <input
+          type="text"
+          id="quickSource"
+          class="input-field"
+          placeholder="0 / http://... / video.mp4"
+          value="0"
+        />
+        <div style="display: flex; gap: 6px">
+          <button class="btn btn-sm" onclick="quickStart()" style="flex: 1">
+            Connect
+          </button>
+          <button
+            class="btn btn-sm btn-ghost"
+            onclick="quickTest()"
+            style="flex: 1"
+          >
+            Test
+          </button>
+        </div>
+        <div
+          id="testResult"
+          style="font-size: 0.75rem; color: var(--text-muted); display: none"
+        ></div>
+      </div>
+    </div>
+    <div class="cam-panel-section">
+      <h4>Detection Info</h4>
+      <div class="cam-info-grid">
+        <div class="cam-info-item">
+          <span class="cam-info-label">Model</span
+          ><span class="cam-info-value">YOLOv8n</span>
+        </div>
+        <div class="cam-info-item">
+          <span class="cam-info-label">Tracker</span
+          ><span class="cam-info-value" id="camTracker">Norfair</span>
+        </div>
+        <div class="cam-info-item">
+          <span class="cam-info-label">Resolution</span
+          ><span class="cam-info-value">1280x720</span>
+        </div>
+        <div class="cam-info-item">
+          <span class="cam-info-label">Source</span
+          ><span class="cam-info-value" id="camSource">—</span>
+        </div>
+      </div>
+    </div>
+    <div class="cam-panel-section">
+      <h4>Active Tracks</h4>
+      <div class="cam-tracks-list" id="camTracks">
+        <div class="empty-state small"><p>No active tracks</p></div>
+      </div>
+    </div>
+    <div class="cam-panel-section">
+      <h4>Actions</h4>
+      <div class="cam-actions">
+        <button class="btn btn-block" onclick="saveSnapshot()">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            width="16"
+            height="16"
+          >
+            <path
+              d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"
+            />
+            <circle cx="12" cy="13" r="4" />
+          </svg>
+          Save Snapshot
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_scripts %}
+<script>
+  function quickStart() {
+    const src = document.getElementById("quickSource").value.trim();
+    if (!src) {
+      showToast("Enter a source", "error");
+      return;
+    }
+    const btn = document.getElementById("cameraToggleBtn");
+    btn.innerHTML =
+      '<svg class="spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg><span>Connecting...</span>';
+    btn.disabled = true;
+    fetch("/api/camera/start", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ source: src }),
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        btn.disabled = false;
+        if (d.success) {
+          cameraRunning = true;
+          btn.innerHTML =
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg><span>Stop Camera</span>';
+          btn.classList.add("btn-active");
+          showLiveIndicators(true);
+          reloadAllFeeds();
+          document.getElementById("camSource").textContent =
+            src.length > 20 ? src.substring(0, 20) + "..." : src;
+          showToast("Connected: " + src, "success");
+        } else {
+          btn.innerHTML =
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polygon points="5 3 19 12 5 21 5 3"/></svg><span>Start Camera</span>';
+          showToast("Failed to open: " + src, "error");
+        }
+      })
+      .catch(() => {
+        btn.disabled = false;
+        btn.innerHTML =
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polygon points="5 3 19 12 5 21 5 3"/></svg><span>Start Camera</span>';
+        showToast("Connection error", "error");
+      });
+  }
+  function quickTest() {
+    const src = document.getElementById("quickSource").value.trim();
+    const el = document.getElementById("testResult");
+    el.style.display = "block";
+    el.innerHTML = '<span style="color:var(--warning);">Testing...</span>';
+    fetch("/api/camera/test", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ source: src }),
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.success) {
+          el.innerHTML = `<span style="color:var(--accent);">✓ OK</span> — ${d.resolution} @ ${d.fps} FPS`;
+        } else {
+          el.innerHTML = `<span style="color:var(--danger);">✗ Failed</span> — ${d.error || "Cannot open source"}`;
+        }
+      });
+  }
+
+  function saveSnapshot() {
+    const img = document.getElementById("cameraFeed");
+    const c = document.createElement("canvas");
+    c.width = img.naturalWidth || 1280;
+    c.height = img.naturalHeight || 720;
+    c.getContext("2d").drawImage(img, 0, 0);
+    const a = document.createElement("a");
+    a.download = "snapshot_" + Date.now() + ".jpg";
+    a.href = c.toDataURL("image/jpeg");
+    a.click();
+    showToast("Snapshot saved", "success");
+  }
+
+  window.onTrackingUpdate = function (data) {
+    document.getElementById("camFps").textContent = data.fps;
+    document.getElementById("camActive").textContent = data.active_vehicles;
+    document.getElementById("camIn").textContent = data.count_in;
+    document.getElementById("camOut").textContent = data.count_out;
+    document.getElementById("camCong").textContent =
+      Math.round((data.congestion?.level || 0) * 100) + "%";
+    const list = document.getElementById("camTracks");
+    if (data.tracks && data.tracks.length) {
+      list.innerHTML = data.tracks
+        .map(
+          (t) =>
+            `<div class="cam-track-item"><span class="mono">#${t.id}</span><span class="vehicle-badge">${t.type}</span><span class="mono ${t.speed > 60 ? "text-danger" : ""}">${t.speed} km/h</span></div>`,
+        )
+        .join("");
+    } else {
+      list.innerHTML =
+        '<div class="empty-state small"><p>No active tracks</p></div>';
+    }
+  };
+</script>
+{% endblock %}

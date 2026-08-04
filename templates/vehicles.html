@@ -1,0 +1,83 @@
+{% extends "base.html" %} {% set page = 'vehicles' %} {% block title
+%}Vehicles{% endblock %} {% block page_title %}Vehicle Detection Log{% endblock
+%} {% block content %}
+<div class="card">
+  <div class="card-header">
+    <div class="card-filters">
+      <input type="date" id="vDate" class="input-field" onchange="loadV()" />
+      <select id="vType" class="input-field" onchange="loadV()">
+        <option value="">All Types</option>
+        <option value="car">Car</option>
+        <option value="truck">Truck</option>
+        <option value="bus">Bus</option>
+        <option value="motorcycle">Motorcycle</option>
+      </select>
+    </div>
+    <button class="btn btn-sm" onclick="loadV()">Refresh</button>
+  </div>
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Track ID</th>
+          <th>Type</th>
+          <th>Speed</th>
+          <th>Direction</th>
+          <th>Timestamp</th>
+          <th>Snapshot</th>
+        </tr>
+      </thead>
+      <tbody id="vBody">
+        <tr>
+          <td colspan="6" class="empty-table">Loading...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="table-pagination">
+    <button class="btn btn-sm btn-ghost" onclick="chgPage(-1)">Previous</button>
+    <span class="page-info" id="pageInfo">Page 1</span>
+    <button class="btn btn-sm btn-ghost" onclick="chgPage(1)">Next</button>
+  </div>
+</div>
+{% endblock %} {% block extra_scripts %}
+<script>
+  let vPage = 0;
+  function loadV() {
+    const d = document.getElementById("vDate").value,
+      t = document.getElementById("vType").value;
+    let u = `/api/vehicles?limit=20&offset=${vPage * 20}`;
+    if (d) u += `&date=${d}`;
+    if (t) u += `&type=${t}`;
+    fetch(u)
+      .then((r) => r.json())
+      .then((vehicles) => {
+        const b = document.getElementById("vBody");
+        if (!vehicles.length) {
+          b.innerHTML =
+            '<tr><td colspan="6" class="empty-table">No vehicles found</td></tr>';
+          return;
+        }
+        b.innerHTML = vehicles
+          .map((v) => {
+            const tid = v.track_id != null ? v.track_id : "—";
+            return `<tr>
+                <td><a href="/vehicles/${tid}" class="mono track-link">#${tid}</a></td>
+                <td><span class="vehicle-badge">${v.vehicle_type || "—"}</span></td>
+                <td><span class="mono">${v.speed || 0} km/h</span></td>
+                <td>${v.direction || "—"}</td>
+                <td><span class="text-muted">${formatTime(v.timestamp)}</span></td>
+                <td>${v.snapshot_path ? '<span class="badge success">Saved</span>' : '<span class="text-muted">—</span>'}</td>
+            </tr>`;
+          })
+          .join("");
+        document.getElementById("pageInfo").textContent = "Page " + (vPage + 1);
+      });
+  }
+  function chgPage(d) {
+    vPage = Math.max(0, vPage + d);
+    loadV();
+  }
+  document.addEventListener("DOMContentLoaded", loadV);
+</script>
+{% endblock %}
